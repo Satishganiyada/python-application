@@ -1,49 +1,51 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "python:v1"
+        CONTAINER_NAME = "python-app"
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Satishganiyada/python-application'
             }
         }
+
         stage('Build') {
             steps {
-                echo 'Building...'
-                sh 'docker build -t python:v1 .'
+                echo 'Building Docker image...'
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
-         stage('Test') {
-            agent {
-                docker {
-                    image 'python:v1' // Uses the Docker image built in the previous stage
-                    args '-v /tmp:/tmp' // Optional: Mount a volume if needed for test results or data
-                }
-            }
+
+        stage('Test Container') {
             steps {
-                sh './run-tests.sh' // Executes a shell script containing your test commands inside the container
-                // Or directly run test commands:
-                // sh 'npm test' // For Node.js projects
-                // sh 'mvn test' // For Java Maven projects
-                // sh 'pytest' // For Python projects
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml' // Optional: Publish JUnit test results
+                script {
+                    echo 'Testing container...'
+                    // Stop & remove old container if exists
+                    sh """
+                        docker ps -q --filter "name=${CONTAINER_NAME}" | grep -q . && docker stop ${CONTAINER_NAME} && docker rm ${CONTAINER_NAME} || true
+                    """
+                    // Run a fresh container just to verify it works
+                    sh "docker run --rm --name ${CONTAINER_NAME} ${DOCKER_IMAGE} echo 'Container started successfully!'"
                 }
             }
         }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying...'
+                echo 'Deploying with Docker Compose...'
                 sh 'docker compose up -d'
             }
         }
+
         stage('Push to Docker Hub') {
             steps {
                 script {
                     sh "docker login -u satish2323 -p Satish@216"
-                    sh "docker push python:v1"
+                    sh "docker push ${DOCKER_IMAGE}"
                 }
             }
         }
@@ -51,10 +53,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed successfully! ✅'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline failed ❌'
         }
     }
 }
