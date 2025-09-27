@@ -1,0 +1,5 @@
+services:
+  pythonapp:
+    image: python:v1
+    ports:
+    - 5000:5000
