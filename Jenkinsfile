@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "python:v1"
+        DOCKER_IMAGE = "satish2323/python:v1"
         CONTAINER_NAME = "python-app"
     }
 
@@ -16,7 +16,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building Docker image...'
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh "docker build -t satish2323/python:v1 ."
             }
         }
 
