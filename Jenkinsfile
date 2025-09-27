@@ -16,7 +16,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing...'
-                sh 'docker run --rm python:v1 pytest'
+                sh 'docker run --rm python:v1 python -m unittest discover -s tests'
             }
         }
         stage('Deploy') {
